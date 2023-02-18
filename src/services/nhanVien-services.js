@@ -30,18 +30,19 @@ function CallNhanVienApi() {
     // Sua
     this.updateNVien = function (nvien) {
         return axios({
-            url: `http://svcy.myclass.vn/api/QuanLyNhanVienApi/CapNhatThongTinNhanVien?maNhanVien=${nvien.id}`,
+            url: `http://svcy.myclass.vn/api/QuanLyNhanVienApi/CapNhatThongTinNhanVien?maNhanVien=${nvien.maNhanVien}`,
             method: "PUT",
             data: nvien,
         });
     };
-}
 
-//   http://svcy.myclass.vn/api/QuanLyNhanVienApi/XoaNhanVien?maSinhVien=1990
-// xoa
-this.deleteNVien = function (id) {
-    return axios({
-        url: `http://svcy.myclass.vn/api/QuanLyNhanVienApi/XoaNhanVien?maSinhVien=${id}`,
-        method: "DELETE",
-    });
-};
+    //   http://svcy.myclass.vn/api/QuanLyNhanVienApi/XoaNhanVien?maSinhVien=1990
+    // xoa
+    this.deleteNVien = function (maNhanVien) {
+        return axios({
+            url: `http://svcy.myclass.vn/api/QuanLyNhanVienApi/XoaNhanVien?maSinhVien=${maNhanVien}`,
+            method: "DELETE",
+        });
+    };
+
+}

@@ -1,11 +1,18 @@
-function NhanVien(_maNV, _hoTen, _email, _matKhau, _ngaySinh, _chucVu) {
+function NhanVien(_maNhanVien, _tenNhanVien, _chucVu, _heSoChucVu, _luongCoBan, _soGioLamTrongThang) {
   //property
-  this.maNV = _maNV;
-  this.hoTen = _hoTen;
-  this.email = _email;
-  this.matKhau = _matKhau;
-  this.ngaySinh = _ngaySinh;
+  this.maNhanVien = _maNhanVien;
+  this.tenNhanVien = _tenNhanVien;
   this.chucVu = _chucVu;
+  this.heSoChucVu = _heSoChucVu;
+  this.luongCoBan = _luongCoBan;
+  this.soGioLamTrongThang = _soGioLamTrongThang;
 
   //method
+  /* 
+  "maNhanVien": 1990,
+  "tenNhanVien": "QuanLuu",
+  "chucVu": "developer",
+  "heSoChucVu": 1,
+  "luongCoBan": 1000000.0,
+  "soGioLamTrongThang": 180.0 */
 }

@@ -1,9 +1,20 @@
-//Tao doi tuong dsnv tu lop doi tuong DanhSachNhanVien
-var dsnv = new DanhSachNhanVien();
+var callNhanVienApi = new CallNhanVienApi();
 var validation = new Validation();
-setLocalStorage();
-getLocalStorage();
+var arrNhanVien = [];
+getListNVien();
+function getListNVien() {
 
+  callNhanVienApi
+    .fetchListData()
+    .then(function (result) {
+      renderData(result.data);
+      arrNhanVien = result.data;
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+
+}
 /**
  * DOM id
  */
@@ -12,111 +23,56 @@ function getEle(id) {
 }
 
 /**
- * Lay thong tin nhan vien
+ * Tìm kiếm NV
  */
-function layThongTinNV() {
-  //DOM lấy các thông tin user nhập vào các thẻ input
-  var maNV = getEle("msnv").value;
-  var hoTen = getEle("name").value;
-  var email = getEle("email").value;
-  var matKhau = getEle("password").value;
-  var ngaySinh = getEle("datepicker").value;
-  var chucVu = getEle("chucvu").value;
-
-  /**
-   * Validation
-   */
-  var isValid = true;
-
-  isValid = validation.kiemTraRong(maNV, "tbMaNV", "(*) Vui long nhap MaNV");
-
-  if (!isValid) return null;
-
-  //tạo đối tượng từ lớp đối tượng NhanVien
-  var nv = new NhanVien(maNV, hoTen, email, matKhau, ngaySinh, chucVu);
-
-  return nv;
+function searchNVien(keyword) {
+  arrTimKiem = [];
+  arrNhanVien.forEach(function (nv) {
+    var hoTenLowerCase = nv.tenNhanVien.toLowerCase();
+    var keywordLowerCase = keyword.toLowerCase();
+    if (hoTenLowerCase.indexOf(keywordLowerCase) !== -1) {
+      arrTimKiem.push(nv);
+    }
+  });
+  return arrTimKiem;
 }
-
 /**
- * Them Nhan Vien
+ * Xử lý nút tìm kiếm
  */
-getEle("btnThemNV").addEventListener("click", function () {
-  var nv = layThongTinNV();
-
-  if (nv) {
-    dsnv.themNV(nv);
-
-    renderNV(dsnv.arr);
-
-    //close modal
-    getEle("btnDong").click();
-
-    setLocalStorage();
-
-    resetForm();
-  }
+getEle("searchName").addEventListener("keyup", function () {
+  var keyword = getEle("searchName").value;
+  var mangTimKiem = searchNVien(keyword);
+  renderData(mangTimKiem);
 });
 
 /**
  * Hien thi danh sach NV
  */
-function renderNV(data) {
-  var contentHTML = "";
 
-  data.forEach(function (nv) {
+function renderData(data) {
+  var contentHTML = "";
+  data.forEach(function (nv, i) {
     contentHTML += `
             <tr>
-                <td>${nv.maNV}</td>
-                <td>${nv.hoTen}</td>
-                <td>${nv.email}</td>
-                <td>${nv.ngaySinh}</td>
+            <td>${i + 1}</td>
+                <td>${nv.maNhanVien}</td>
+                <td>${nv.tenNhanVien}</td>
                 <td>${nv.chucVu}</td>
+                <td>${nv.heSoChucVu}</td>
+                <td>${nv.luongCoBan}</td>
+                <td>${nv.soGioLamTrongThang}</td>                
                 <td>
-                    <button class="btn btn-info" data-toggle="modal" data-target="#myModal" onclick="editNV('${nv.maNV}')">Edit</button>
-                    <button class="btn btn-danger" onclick="deleteNV('${nv.maNV}')">Delete</button>
+                    <button class="btn btn-info" data-toggle="modal" data-target="#myModal" onclick="editNV('${nv.maNhanVien}')">Edit</button>
+                    <button class="btn btn-danger" onclick="deleteNV('${nv.maNhanVien}')">Delete</button>
                 </td>
             </tr>
         `;
   });
-
   getEle("tableDanhSach").innerHTML = contentHTML;
+
 }
 
-// function renderNV(data) {
-//   var contentHTML = "";
-
-//   for (var i = 0; i < data.length; i++) {
-//     var nv = data[i];
-//     contentHTML += "<tr>";
-//     contentHTML += "<td>" + nv.maNV + "</td>";
-//     contentHTML += "<td>" + nv.hoTen + "</td>";
-//     contentHTML += "<td>" + nv.email + "</td>";
-//     contentHTML += "<td>" + nv.ngaySinh + "</td>";
-//     contentHTML += "<td>" + nv.chucVu + "</td>";
-//     contentHTML += "</tr>";
-//   }
-
-//   getEle("tableDanhSach").innerHTML = contentHTML;
-// }
-
-/**
- * Delete NV
- */
-function deleteNV(maNV) {
-  dsnv.xoaNV(maNV);
-  renderNV(dsnv.arr);
-  setLocalStorage();
-}
-
-getEle("btnThem").addEventListener("click", function () {
-  //Dom tới nút "Cap Nhat" cho ẩn
-  getEle("btnCapNhat").style.display = "none";
-  getEle("btnThemNV").style.display = "block";
-
-  getEle("msnv").disabled = false;
-});
-
+// xu ly nut edit
 /**
  * Edit NV
  */
@@ -124,68 +80,174 @@ function editNV(maNV) {
   console.log(maNV);
   getEle("btnThemNV").style.display = "none";
   getEle("btnCapNhat").style.display = "block";
-
-  var nv = dsnv.layThongTinNV(maNV);
-
-  if (nv) {
-    //hiển thị thông nv ra các thẻ input
-    getEle("msnv").value = nv.maNV;
-    //disabled #msnv
-    getEle("msnv").disabled = true;
-
-    getEle("name").value = nv.hoTen;
-    getEle("email").value = nv.email;
-    getEle("password").value = nv.matKhau;
-    getEle("datepicker").value = nv.ngaySinh;
-    getEle("chucvu").value = nv.chucVu;
-  }
+  resetForm();
+  callNhanVienApi
+    .getNVienById(maNV)
+    .then(function (result) {
+      var nhanVien = result.data;
+      validation.resetThongBao();
+      getEle("maNhanVien").value = nhanVien.maNhanVien;
+      getEle("maNhanVien").disabled = true;
+      getEle("tenNhanVien").value = nhanVien.tenNhanVien;
+      getEle("heSoChucVu").value = nhanVien.heSoChucVu;
+      console.log("he so chuc vu: " + nhanVien.heSoChucVu);
+      getEle("luongCoBan").value = nhanVien.luongCoBan;
+      getEle("soGioLamTrongThang").value = nhanVien.soGioLamTrongThang;
+      switch (nhanVien.heSoChucVu) {
+        case 1:
+          getEle("opt1").setAttribute("selected", "selected");
+          console.log("chuc vu case1: " + nhanVien.heSoChucVu);
+          break;
+        case 2:
+          getEle("opt2").setAttribute("selected", "selected");
+          console.log("chuc vu case2: " + nhanVien.heSoChucVu);
+          break;
+        default:
+          getEle("opt3").setAttribute("selected", "selected");
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
 }
+
 
 /**
  * Update NV
+ * Xử lý nút update
  */
 getEle("btnCapNhat").addEventListener("click", function () {
-  var nv = layThongTinNV();
-  dsnv.capNhatNV(nv);
-  //close modal
+  handleUpdate(getEle("maNhanVien").value);
   getEle("btnDong").click();
-  renderNV(dsnv.arr);
-  setLocalStorage();
+});
+
+
+/**
+ * Update Product
+ */
+function handleUpdate(id) {
+  var nhanVien = layThongTinNV();
+  callNhanVienApi
+    .updateNVien(nhanVien)
+    .then(function (result) {
+      if (getEle("searchName").value == "")
+        getListNVien();
+      else {
+        callNhanVienApi.fetchListData()
+          .then(function (result) {
+            arrNhanVien = result.data;
+            console.log("getEle searchName: " + getEle("searchName").value)
+            var mangTimKiem = searchNVien(getEle("searchName").value);
+            renderData(mangTimKiem);
+          })
+
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+}
+
+/**
+ * Lay thong tin nhan vien
+ */
+function layThongTinNV() {
+  //DOM lấy các thông tin user nhập vào các thẻ input
+  var maNhanVien = getEle("maNhanVien").value;
+  var tenNhanVien = getEle("tenNhanVien").value;
+  var heSoChucVu = getEle("chucvu").value * 1;
+  var chucVu = "";
+  switch (heSoChucVu) {
+    case 1:
+      chucVu = getEle("opt1").innerHTML;
+      break;
+    case 2:
+      chucVu = getEle("opt2").innerHTML;
+      break;
+    default:
+      chucVu = getEle("opt3").innerHTML;
+
+  }
+  var luongCoBan = getEle("luongCoBan").value;
+  var soGioLamTrongThang = getEle("soGioLamTrongThang").value;
+  console.log("maNhanVien update" + maNhanVien);
+  console.log("tenNhanVien update: " + tenNhanVien);
+  console.log("chucVu update" + chucVu);
+  console.log("heSoChucVu update: " + heSoChucVu);
+  console.log("luongCoBan update: " + luongCoBan);
+  console.log("soGioLamTrongThang update: " + soGioLamTrongThang);
+
+  /**
+   * Validation
+   */
+  var isValid = true;
+  isValid = validation.kiemTraRong(maNhanVien, "tbMaNhanVien", "(*) Vui long nhap MaNV") &&
+    validation.kiemTraMaNV(maNhanVien, "tbMaNhanVien", "(*) MaNV chỉ tối đa 4 ký số") &&
+    validation.kiemTraTenNV(tenNhanVien, "tbTenNhanVien", "(*) Tên nhân viên phải là chữ") &&
+    validation.kiemTraLuong(luongCoBan, "tbLuongCoBan", "(*) Lương cơ bản 1 000 000 - 20 000 000") &&
+    validation.kiemTraGioLam(soGioLamTrongThang, "tbSoGioLamTrongThang", "(*) Số giờ làm trong tháng 50 - 150 giờ");
+  if (!isValid) return null;
+  var nv = new NhanVien(maNhanVien, tenNhanVien, chucVu, heSoChucVu, luongCoBan, soGioLamTrongThang);
+  return nv;
+}
+/**
+ * Xử lý nút thêm
+ */
+getEle("btnThem").addEventListener("click", function () {
+  resetForm();
+  getEle("btnCapNhat").style.display = "none";
+  getEle("btnThemNV").style.display = "block";
 });
 
 /**
- * Search NV
+ * Them Nhan Vien
  */
-getEle("searchName").addEventListener("keyup", function () {
-  var keyword = getEle("searchName").value;
-
-  var mangTimKiem = dsnv.timKiemNV(keyword);
-  renderNV(mangTimKiem);
-});
-
+getEle("btnThemNV").addEventListener("click", function () {
+  var nhanVien = layThongTinNV();
+  if (nhanVien !== null) {
+    callNhanVienApi
+      .addNVien(nhanVien)
+      .then(function (result) {
+        getListNVien();
+      }).then(function (result) {
+        callNhanVienApi
+          .fetchListData()
+          .then(function (result) {
+            arrNhanVien = result.data;
+            console.log("getEle searchName: " + getEle("searchName").value)
+            var mangTimKiem = searchNVien(getEle("searchName").value);
+            renderData(mangTimKiem);
+          }).catch(function (error) {
+            console.log(error);
+          });
+      }).catch(function (error) {
+        console.log(error);
+      });
+  }
+  getEle("btnDong").click();
+}
+);
+/**
+ * Delete NV
+ */
+function deleteNV(id) {
+  callNhanVienApi
+    .deleteNVien(id)
+    .then(function () {
+      getListNVien();
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+}
 /**
  * Reset Form
  */
 function resetForm() {
   getEle("formNV").reset();
-}
-
-/**
- * Luu DSNV
- */
-function setLocalStorage() {
-  //convert data JSON => String
-  var dataString = JSON.stringify(dsnv.arr);
-  localStorage.setItem("DSNV", dataString);
-}
-
-/**
- * Lấy data từ LocalStorage
- */
-function getLocalStorage() {
-  var dataString = localStorage.getItem("DSNV");
-  //convert string => JSON
-  dsnv.arr = JSON.parse(dataString);
-  //render tbody
-  renderNV(dsnv.arr);
+  getEle("maNhanVien").disabled = false;
+  getEle("chucvu").value = 1;
+  getEle("opt1").removeAttribute("selected");
+  getEle("opt2").removeAttribute("selected");
+  getEle("opt3").removeAttribute("selected");
 }
